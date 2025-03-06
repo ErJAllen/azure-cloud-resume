@@ -1,36 +1,23 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Primitives;
+using System.IO;
+using System.Text;
+using Microsoft.Azure.Functions.Worker.Http;
+using System.Text.Json;
 using System.Collections.Generic;
 
-namespace tests
+public static class TestFactory
 {
-    public class TestFactory
+    public static HttpRequestData CreateHttpRequest()
     {
-    
-        public static HttpRequest CreateHttpRequest()
-        {
-            var context = new DefaultHttpContext();
-            var request = context.Request;
-            return request;
-        }
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}")); // Empty JSON body
+        return new TestHttpRequestData(new TestFunctionContext(), request);
+    }
 
-        public static ILogger CreateLogger(LoggerTypes type = LoggerTypes.Null)
-        {
-            ILogger logger;
-
-            if (type == LoggerTypes.List)
-            {
-                logger = new ListLogger();
-            }
-            else
-            {
-                logger = NullLoggerFactory.Instance.CreateLogger("Null Logger");
-            }
-
-            return logger;
-        }
+    public static ILogger CreateLogger()
+    {
+        return LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("TestLogger");
     }
 }

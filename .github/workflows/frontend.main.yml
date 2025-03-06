@@ -5,7 +5,7 @@ on:
     push:
         branches: [ main ]
         paths: 
-            - 'frontend/**'
+        - 'frontend/**'
 
 permissions:
       id-token: write
@@ -18,9 +18,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: azure/login@v2
       with:
-        client-id: ${{ '097052b6-100e-4050-87cd-d5ef4ad2e9cf' }}
-        tenant-id: ${{ '739a3cd2-4a5a-444e-ac60-db88a0791f73' }}
-        subscription-id: ${{ '6076e8fa-caa8-40ad-ac8e-aa79953ee3bf' }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Upload to blob storage
       uses: azure/CLI@v1
