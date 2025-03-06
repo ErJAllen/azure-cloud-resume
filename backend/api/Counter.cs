@@ -8,7 +8,7 @@ namespace Company.Function
         [JsonProperty(PropertyName="id")]
         public string Id {get; set;}= string.Empty;
         [JsonProperty(PropertyName="count")]
-        public int count {get; set;}
+        public int Count {get; set;}
         [JsonPropertyName("partitionKey")]
         public string PartitionKey { get; set; } = "1";
     }

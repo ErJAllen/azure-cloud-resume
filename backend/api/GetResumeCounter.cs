@@ -42,11 +42,11 @@ namespace Company.Function
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 _logger.LogWarning("Counter document not found, initializing a new one.");
-                counter = new Counter { Id = counterId, PartitionKey = partitionKey, count = 0 };
+                counter = new Counter { Id = counterId, PartitionKey = partitionKey, Count = 0 };
             }
 
             // Increment count
-            counter.count += 1;
+            counter.Count += 1;
             await container.UpsertItemAsync(counter, new PartitionKey(counter.PartitionKey));
 
             // Return response

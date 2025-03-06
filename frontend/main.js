@@ -1,27 +1,28 @@
-// Function to fetch and display page views from the API
 async function fetchAndDisplayViewCount() {
-    
     try {
-         // Update with your live API URL if deployed
-        const functionApiUrl = "https://get-azureresumecounter.azurewebsites.net/api/GetResumeCounter?code=iI2HPclIcdp5r7EyGmqpORY3fi19P3IsEmbCwdSsHBPIAzFuTnroAg%3D%3D";
-        const localFunctionApi = "";
+        // Use local API in development, Azure API in production
+        const functionApiUrl = "https://azureresumecounter.azurewebsites.net/api/GetResumeCounter?code=fASQh3UnnA--8yJ0iwiWbZxHtrVUxCcyXnxyqUKs9dnXAzFuweomiQ==";
+        const localFunctionApi = "http://localhost:7071/api/GetResumeCounter";
+        const apiUrl = window.location.hostname === "localhost" ? localFunctionApi : functionApiUrl;
+
         // Make a GET request to the Azure Function API
-        const response = await fetch(localFunctionApi);
-    
+        const response = await fetch(functionApiUrl);
+
         if (!response.ok) {
             throw new Error(`API error: ${response.statusText}`);
         }
 
         // Parse the JSON response
         const data = await response.json();
-        console.log("API Response:", data.count)
+        console.log("API Response:", data); // Debugging
+
+        // Handle different possible response formats
+        const count = data.Count || data.count || data.value;
 
         // Update the displayed counter with the value from Cosmos DB
-        const count = data.Count || data.count || data.value;
         const viewDisplayElement = document.getElementById('viewCountDisplay');
         if (viewDisplayElement) {
-            viewDisplayElement.textContent = `This page has been viewed ${data.count} times.`;
-            
+            viewDisplayElement.textContent = `This page has been viewed ${count} times.`;
         }
     } catch (error) {
         console.error("Error fetching view count:", error);
