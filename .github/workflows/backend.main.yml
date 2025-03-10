@@ -1,50 +1,48 @@
-name: .NET Core
+name: deploy_api
 
-on: [push]
-
-permissions:
-      id-token: write
-      contents: read
+on:
+  workflow_dispatch:
+  push:
+      branches: [ main ]
+      paths:
+      - 'api/**'
 
 env:
-  AZURE_WEBAPP_NAME: my-app    # set this to your application's name
-  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x'           # set this to the dot net version to use
+  AZURE_FUNCTIONAPP_NAME: 'gpsazureresumecounter'   # set this to your function app name on Azure
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'api'       # set this to the path to your function app project, defaults to the repository root
+  DOTNET_VERSION: '8.0.x'                   # set this to the dotnet version to use (e.g. '2.1.x', '3.1.x', '5.0.x')
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  build-and-deploy:
+    runs-on: ubuntu-latest # For Linux, use ubuntu-latest
     steps:
-      # Checkout the repo
-      - uses: actions/checkout@main
-      - uses: azure/login@v2
-        with:
-          client-id: ${{ '097052b6-100e-4050-87cd-d5ef4ad2e9cf' }}
-          tenant-id: ${{ '739a3cd2-4a5a-444e-ac60-db88a0791f73' }}
-          subscription-id: ${{ '6076e8fa-caa8-40ad-ac8e-aa79953ee3bf' }}
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
 
-      
-      # Setup .NET Core SDK
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }} 
-      
-      # Run dotnet build and publish
-      - name: dotnet build and publish
-        run: |
-          dotnet restore
-          dotnet build --configuration Release
-          dotnet publish -c Release --property:PublishDir='${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp' 
-          
-      # Deploy to Azure Web apps
-      - name: 'Run Azure webapp deploy action using publish profile credentials'
-        uses: azure/webapps-deploy@v3
-        with: 
-          app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
-          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
-      
-      - name: logout
-        run: |
-          az logout
+    # If you want to use Azure RBAC instead of Publish Profile, then uncomment the task below
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }} # set up AZURE_RBAC_CREDENTIALS secrets in your repository
+
+    - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 'Resolve Project Dependencies Using Dotnet'
+      shell: bash # For Linux, use bash
+      run: |
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        dotnet build --configuration Release --output ./output
+        popd
+
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+       # publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} # Remove publish-profile to use Azure RBAC
+        sku: flexconsumption
+        remote-build: false
