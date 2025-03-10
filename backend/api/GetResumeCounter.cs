@@ -25,6 +25,7 @@ namespace Company.Function
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
         {
+            //This is where the counter gets updated
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
             var container = _cosmosClient.GetContainer(databaseName, containerName);
